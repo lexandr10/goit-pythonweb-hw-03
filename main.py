@@ -5,12 +5,14 @@ import urllib.parse
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from datetime import datetime
 
-
+from jinja2 import Environment, FileSystemLoader
+from pyexpat.errors import messages
 
 BASE_DIR = Path(__file__).parent
 STORAGE_DIR = BASE_DIR / "storage"
 STORAGE_DIR.mkdir(exist_ok=True)
 DATA_FILE = STORAGE_DIR / "data.json"
+jinja2 = Environment(loader=FileSystemLoader("storage"))
 
 
 class MyHandler(BaseHTTPRequestHandler):
@@ -21,6 +23,8 @@ class MyHandler(BaseHTTPRequestHandler):
                 self.send_html("index.html")
             case "/message":
                 self.send_html("message.html")
+            case "/read":
+                self.send_read_page()
             case _:
                 file = BASE_DIR.joinpath(route.path[1:])
                 if file.exists():
@@ -44,6 +48,23 @@ class MyHandler(BaseHTTPRequestHandler):
                 self.end_headers()
             else:
                 self.send_html("error.html", status=400)
+
+    def send_read_page(self):
+        messages = self.load_messages()
+        template = jinja2.get_template("read.html")
+        html_content = template.render(messages=messages)
+
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        self.wfile.write(html_content.encode("utf-8"))
+
+    def load_messages(self):
+        try:
+            with open(DATA_FILE, "r", encoding="utf-8") as file:
+                return json.load(file)
+        except (FileNotFoundError, json.JSONDecodeError):
+            return {}
 
     def save_message(self, username, message):
         try:

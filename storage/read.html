@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Збережені повідомлення</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+</head>
+<body class="container mt-4">
+    <h1 class="mb-3">Усі збережені повідомлення</h1>
+    {% if messages %}
+        <ul class="list-group">
+            {% for timestamp, message in messages.items() %}
+                <li class="list-group-item">
+                    <strong>{{ message.username }}</strong> ({{ timestamp }}):
+                    <p>{{ message.message }}</p>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Немає повідомлень.</p>
+    {% endif %}
+    <a href="/" class="btn btn-primary mt-3">На головну</a>
+</body>
+</html>
