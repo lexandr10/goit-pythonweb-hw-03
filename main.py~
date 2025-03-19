@@ -60,7 +60,11 @@ class MyHandler(BaseHTTPRequestHandler):
         self.wfile.write(html_content.encode("utf-8"))
 
     def load_messages(self):
-        
+        try:
+            with open(DATA_FILE, "r", encoding="utf-8") as file:
+                return json.load(file)
+        except (FileNotFoundError, json.JSONDecodeError):
+            return {}
 
     def save_message(self, username, message):
         try:

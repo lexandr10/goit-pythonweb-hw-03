@@ -6,7 +6,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from datetime import datetime
 
 from jinja2 import Environment, FileSystemLoader
-from pyexpat.errors import messages
+
 
 BASE_DIR = Path(__file__).parent
 STORAGE_DIR = BASE_DIR / "storage"
@@ -20,9 +20,9 @@ class MyHandler(BaseHTTPRequestHandler):
         route = urllib.parse.urlparse(self.path)
         match route.path:
             case "/":
-                self.send_html("index.html")
+                self.send_html("templates/index.html")
             case "/message":
-                self.send_html("message.html")
+                self.send_html("templates/message.html")
             case "/read":
                 self.send_read_page()
             case _:
@@ -30,7 +30,7 @@ class MyHandler(BaseHTTPRequestHandler):
                 if file.exists():
                     self.send_static(file)
                 else:
-                    self.send_html("error.html", status=404)
+                    self.send_html("templates/error.html", status=404)
 
     def do_POST(self):
         if self.path == "/message":
@@ -47,7 +47,7 @@ class MyHandler(BaseHTTPRequestHandler):
                 self.send_header("Location", "/")
                 self.end_headers()
             else:
-                self.send_html("error.html", status=400)
+                self.send_html("templates/error.html", status=400)
 
     def send_read_page(self):
         messages = self.load_messages()
@@ -81,10 +81,16 @@ class MyHandler(BaseHTTPRequestHandler):
 
 
     def send_html(self, filename, status=200):
+        file_path = BASE_DIR / filename.lstrip("/")
+        if not file_path.exists():
+            self.send_response(404)
+            self.end_headers()
+            self.wfile.write(b"404 Not Found")
+            return
         self.send_response(status)
         self.send_header("Content-type", "text/html")
         self.end_headers()
-        with open(filename, 'rb') as file:
+        with open(file_path, 'rb') as file:
             self.wfile.write(file.read())
 
     def send_static(self, filename, status=200):
